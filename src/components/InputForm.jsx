@@ -3,18 +3,26 @@ import { useState } from "react";
 const InputForm = ({ onSubmit }) => {
   const [numProcesses, setNumProcesses] = useState("");
   const [burstTimes, setBurstTimes] = useState([""]);
+  const [arrivalTimes, setArrivalTimes] = useState([""]);
   const [quantum, setQuantum] = useState("");
 
   const handleNumProcessesChange = (e) => {
     const value = e.target.value;
     setNumProcesses(value);
     setBurstTimes(Array(parseInt(value)).fill(""));
+    setArrivalTimes(Array(parseInt(value)).fill(""));
   };
 
   const handleBurstTimeChange = (index, value) => {
     const newBurstTimes = [...burstTimes];
     newBurstTimes[index] = value;
     setBurstTimes(newBurstTimes);
+  };
+
+  const handleArrivalTimeChange = (index, value) => {
+    const newArrivalTimes = [...arrivalTimes];
+    newArrivalTimes[index] = value;
+    setArrivalTimes(newArrivalTimes);
   };
 
   const handleQuantumChange = (e) => setQuantum(e.target.value);
@@ -24,6 +32,7 @@ const InputForm = ({ onSubmit }) => {
     onSubmit({
       numProcesses: parseInt(numProcesses),
       burstTimes: burstTimes.map(Number),
+      arrivalTimes: arrivalTimes.map(Number),
       quantum: parseInt(quantum),
     });
   };
@@ -63,6 +72,26 @@ const InputForm = ({ onSubmit }) => {
               id={`burstTime-${index}`}
               value={burstTime}
               onChange={(e) => handleBurstTimeChange(index, e.target.value)}
+              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              required
+            />
+          </div>
+        ))}
+      </div>
+      <div className="flex flex-wrap mb-4">
+        {arrivalTimes.map((arrivalTime, index) => (
+          <div className="mr-4 mb-4" key={index}>
+            <label
+              htmlFor={`arrivalTime-${index}`}
+              className="block text-sm font-medium text-gray-700"
+            >
+              Arrival Time {index + 1} :
+            </label>
+            <input
+              type="number"
+              id={`arrivalTime-${index}`}
+              value={arrivalTime}
+              onChange={(e) => handleArrivalTimeChange(index, e.target.value)}
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               required
             />

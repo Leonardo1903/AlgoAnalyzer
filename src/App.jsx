@@ -5,15 +5,26 @@ import ComparisonChart from "./components/ComparisonChart";
 function App() {
   const [comparisonData, setComparisonData] = useState([]);
 
-  const handleSubmit = ({ numProcesses, burstTimes, quantum }) => {
+  const handleSubmit = ({
+    numProcesses,
+    burstTimes,
+    quantum,
+    arrivalTimes,
+  }) => {
     const rrData = calculateRR(numProcesses, burstTimes, quantum);
     const sjfData = calculateSJF(numProcesses, burstTimes);
     const fcfsData = calculateFCFS(numProcesses, burstTimes);
+    const preemptiveSJFData = calculatePreemptiveSJF(
+      numProcesses,
+      burstTimes,
+      arrivalTimes
+    );
 
     setComparisonData([
       { algorithm: "Round Robin", ...rrData },
       { algorithm: "SJF", ...sjfData },
       { algorithm: "FCFS", ...fcfsData },
+      { algorithm: "Preemptive SJF", ...preemptiveSJFData },
     ]);
   };
 
@@ -155,6 +166,81 @@ function App() {
     };
   };
 
+  const calculatePreemptiveSJF = (numProcesses, burstTimes, arrivalTimes) => {
+    let waitingTimes = Array(numProcesses).fill(0);
+    let remainingBurstTimes = [...burstTimes];
+    let t = 0;
+    let executionOrder = [];
+    let completed = 0;
+    let minm = Number.MAX_VALUE;
+    let shortest = 0;
+    let finishTime;
+    let check = false;
+
+    while (completed !== numProcesses) {
+      for (let j = 0; j < numProcesses; j++) {
+        if (
+          arrivalTimes[j] <= t &&
+          remainingBurstTimes[j] < minm &&
+          remainingBurstTimes[j] > 0
+        ) {
+          minm = remainingBurstTimes[j];
+          shortest = j;
+          check = true;
+        }
+      }
+
+      if (!check) {
+        t++;
+        continue;
+      }
+
+      // If the process is being executed for the first time, push the start time
+      if (
+        executionOrder.length === 0 ||
+        executionOrder[executionOrder.length - 1].process !== shortest
+      ) {
+        executionOrder.push({ process: shortest, start: t });
+      }
+
+      remainingBurstTimes[shortest]--;
+      minm = remainingBurstTimes[shortest];
+      if (minm === 0) minm = Number.MAX_VALUE;
+
+      if (remainingBurstTimes[shortest] === 0) {
+        completed++;
+        check = false;
+        finishTime = t + 1;
+        waitingTimes[shortest] =
+          finishTime - burstTimes[shortest] - arrivalTimes[shortest];
+        if (waitingTimes[shortest] < 0) waitingTimes[shortest] = 0;
+
+        // Update the end time of the last execution order entry
+        executionOrder[executionOrder.length - 1].end = finishTime;
+      } else {
+        // Update the end time of the last execution order entry
+        executionOrder[executionOrder.length - 1].end = t + 1;
+      }
+      t++;
+    }
+
+    let turnaroundTimes = burstTimes.map((bt, i) => bt + waitingTimes[i]);
+    let avgWaitingTime = waitingTimes.reduce((a, b) => a + b, 0) / numProcesses;
+    let avgTurnaroundTime =
+      turnaroundTimes.reduce((a, b) => a + b, 0) / numProcesses;
+    let responseTime = calculateResponseTime(executionOrder, numProcesses);
+    let contextSwitches = calculateContextSwitches(executionOrder);
+    let fairness = calculateFairness(waitingTimes);
+
+    return {
+      avgWaitingTime,
+      avgTurnaroundTime,
+      executionOrder,
+      responseTime,
+      contextSwitches,
+      fairness,
+    };
+  };
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-3xl font-semibold text-center mb-8">

@@ -1,12 +1,12 @@
 import {
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
   Tooltip,
   Legend,
 } from "recharts";
@@ -40,6 +40,25 @@ const ComparisonChart = ({ data }) => {
     "#a4de6c",
     "#d0ed57",
   ];
+
+  const calculateScore = (item) => {
+    return (
+      item.avgWaitingTime +
+      item.avgTurnaroundTime +
+      item.responseTime +
+      item.contextSwitches
+    );
+  };
+
+  const bestAlgorithm = data.reduce(
+    (best, item) => {
+      const score = calculateScore(item);
+      return score < best.score
+        ? { algorithm: item.algorithm, score, item }
+        : best;
+    },
+    { algorithm: null, score: Infinity, item: null }
+  );
 
   return (
     <div className="bg-white p-4 rounded shadow">
@@ -107,6 +126,42 @@ const ComparisonChart = ({ data }) => {
             <Legend />
           </PieChart>
         </div>
+      </div>
+      <div className="mt-8">
+        <h3 className="text-md font-semibold">
+          Best Algorithm: {bestAlgorithm.algorithm}
+        </h3>
+        <h4 className="text-md font-semibold mt-4">Reasons for Selection:</h4>
+        <p>
+          The algorithm was selected as the best algorithm based on the
+          following performance metrics:
+        </p>
+        <ul className="list-disc list-inside">
+          <li>
+            <strong>Average Waiting Time:</strong>{" "}
+            {bestAlgorithm.item.avgWaitingTime}
+          </li>
+          <li>
+            <strong>Average Turnaround Time:</strong>{" "}
+            {bestAlgorithm.item.avgTurnaroundTime}
+          </li>
+          <li>
+            <strong>Response Time:</strong> {bestAlgorithm.item.responseTime}
+          </li>
+          <li>
+            <strong>Context Switches:</strong>{" "}
+            {bestAlgorithm.item.contextSwitches}
+          </li>
+          <li>
+            <strong>Total Score:</strong> {bestAlgorithm.score}
+          </li>
+        </ul>
+        <p>
+          These metrics were combined to calculate a total score for each
+          algorithm. The algorithm with the lowest total score was considered
+          the best. The score is calculated as the sum of the average waiting
+          time, average turnaround time, response time, and context switches.
+        </p>
       </div>
     </div>
   );
